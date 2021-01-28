@@ -8,6 +8,12 @@ type TodoQuickPick = {
   detail: string;
 };
 
+type TodoQuickPickOptions = {
+  canSelectMany?: boolean;
+  placeholder?: string;
+  title?: string;
+};
+
 export async function createTodo(): Promise<TodoInput | undefined> {
   const title = await vscode.window.showInputBox({
     prompt: 'Write the title of your new todo',
@@ -65,9 +71,12 @@ export async function editTodo(
   };
 }
 
-export function selectTodo(todos: Todo[]): Promise<Todo | undefined> {
+export function selectTodos(
+  todos: Todo[],
+  options?: TodoQuickPickOptions
+): Promise<Todo[]> {
   return new Promise((resolve) => {
-    let todo: Todo | undefined = undefined;
+    let selectedTodos: Todo[] = [];
     const quickPick = vscode.window.createQuickPick<TodoQuickPick>();
     quickPick.items = todos
       .filter((todo) => !todo.done)
@@ -80,13 +89,15 @@ export function selectTodo(todos: Todo[]): Promise<Todo | undefined> {
             todo
           } as TodoQuickPick)
       );
-    quickPick.title = 'List of todo';
+    quickPick.title = options?.title || 'Todo list';
+    quickPick.placeholder = options?.placeholder || '';
+    quickPick.canSelectMany = options?.canSelectMany || false;
     quickPick.onDidChangeSelection(() => {
-      todo = quickPick.selectedItems[0].todo;
+      selectedTodos = quickPick.selectedItems.map((item) => item.todo);
       quickPick.hide();
     });
     quickPick.onDidHide(() => {
-      resolve(todo);
+      resolve(selectedTodos);
     });
     quickPick.show();
   });
