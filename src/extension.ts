@@ -1,28 +1,76 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { TodoRepository } from './repositories/TodoRepository';
+import { createTodo, editTodo, selectTodos } from './commands/todos';
+import { CommandType } from './commands/CommandType';
+import { TodoInput } from './entities/Todo';
+import { warn } from 'console';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext): void {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "voltdev" is now active!');
+  const todoRepository = new TodoRepository(context);
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  const disposable = vscode.commands.registerCommand(
-    'voltdev.helloWorld',
-    () => {
-      // The code you place here will be executed every time your command is executed
-
-      // Display a message box to the user
-      vscode.window.showInformationMessage('Hello World from voltdev!');
-    }
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_NEW, async () => {
+      const inputs = await createTodo();
+      if (inputs) {
+        await todoRepository.add(inputs);
+        vscode.window.showInformationMessage('New todo created');
+      }
+    })
   );
 
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_EDIT, async () => {
+      const [selectedTodo] = await selectTodos([
+        ...todoRepository.todos.values()
+      ]);
+      if (!selectedTodo) {
+        return;
+      }
+      const editedInputs = await editTodo(selectedTodo as TodoInput);
+      if (editedInputs) {
+        await todoRepository.edit(editedInputs, selectedTodo.id);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
+      const selectedTodos = await selectTodos(
+        [...todoRepository.todos.values()],
+        { canSelectMany: true, title: "Let's slash some todos" }
+      );
+      await Promise.all(
+        selectedTodos.map((todo) => todoRepository.complete(todo.id))
+      );
+      vscode.window.showInformationMessage(
+        `${selectedTodos.length} todos completed`
+      );
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
+      const [selectedTodo] = await selectTodos([
+        ...todoRepository.todos.values()
+      ]);
+      if (!selectedTodo) {
+        return;
+      }
+
+      const warningOptions = ['Delete it', 'Cancel'];
+      const selectedOption = await vscode.window.showWarningMessage(
+        `This will delete: ${selectedTodo.title} todo`,
+        ...warningOptions
+      );
+
+      if (selectedOption === warningOptions[0]) {
+        await todoRepository.delete(selectedTodo.id);
+        vscode.window.showInformationMessage(
+          `Deleted todo: ${selectedTodo.title}`
+        );
+      }
+    })
+  );
 }
 
 // this method is called when your extension is deactivated
