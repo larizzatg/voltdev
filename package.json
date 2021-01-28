@@ -12,7 +12,8 @@
   "activationEvents": [
     "onCommand:voltdev.todo.test",
     "onCommand:voltdev.todo.new",
-    "onCommand:voltdev.todo.edit"
+    "onCommand:voltdev.todo.edit",
+    "onCommand:voltdev.todo.complete"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -26,6 +27,11 @@
         "command": "voltdev.todo.edit",
         "category": "Voltdev",
         "title": "Edit Todo"
+      },
+      {
+        "command": "voltdev.todo.complete",
+        "category": "Voltdev",
+        "title": "Complete Todo"
       },
       {
         "command": "voltdev.todo.test",

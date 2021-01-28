@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { TodoRepository } from './repositories/TodoRepository';
-import { createTodo, editTodo, selectTodo } from './commands/todos';
+import { createTodo, editTodo, selectTodos } from './commands/todos';
 import { CommandType } from './commands/CommandType';
 import { TodoInput } from './entities/Todo';
 
@@ -19,7 +19,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_EDIT, async () => {
-      const selectedTodo = await selectTodo([...todoRepository.todos.values()]);
+      const [selectedTodo] = await selectTodos([
+        ...todoRepository.todos.values()
+      ]);
       if (!selectedTodo) {
         return;
       }
@@ -27,6 +29,21 @@ export function activate(context: vscode.ExtensionContext): void {
       if (editedInputs) {
         await todoRepository.edit(editedInputs, selectedTodo.id);
       }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
+      const selectedTodos = await selectTodos(
+        [...todoRepository.todos.values()],
+        { canSelectMany: true, title: "Let's slash some todos" }
+      );
+      await Promise.all(
+        selectedTodos.map((todo) => todoRepository.complete(todo.id))
+      );
+      vscode.window.showInformationMessage(
+        `${selectedTodos.length} todos completed`
+      );
     })
   );
 }

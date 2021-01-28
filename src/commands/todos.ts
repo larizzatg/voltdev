@@ -92,10 +92,17 @@ export function selectTodos(
     quickPick.title = options?.title || 'Todo list';
     quickPick.placeholder = options?.placeholder || '';
     quickPick.canSelectMany = options?.canSelectMany || false;
-    quickPick.onDidChangeSelection(() => {
+    const onSelection = () => {
       selectedTodos = quickPick.selectedItems.map((item) => item.todo);
       quickPick.hide();
-    });
+    };
+
+    if (options?.canSelectMany) {
+      quickPick.onDidAccept(onSelection);
+    } else {
+      quickPick.onDidChangeSelection(onSelection);
+    }
+
     quickPick.onDidHide(() => {
       resolve(selectedTodos);
     });
