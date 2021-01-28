@@ -10,11 +10,17 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:voltdev.todo.test"
+    "onCommand:voltdev.todo.test",
+    "onCommand:voltdev.todo.new"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "voltdev.todo.new",
+        "category": "Voltdev",
+        "title": "New Todo"
+      },
       {
         "command": "voltdev.todo.test",
         "category": "Voltdev",
