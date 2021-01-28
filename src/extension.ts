@@ -3,6 +3,7 @@ import { TodoRepository } from './repositories/TodoRepository';
 import { createTodo, editTodo, selectTodos } from './commands/todos';
 import { CommandType } from './commands/CommandType';
 import { TodoInput } from './entities/Todo';
+import { warn } from 'console';
 
 export function activate(context: vscode.ExtensionContext): void {
   const todoRepository = new TodoRepository(context);
@@ -44,6 +45,30 @@ export function activate(context: vscode.ExtensionContext): void {
       vscode.window.showInformationMessage(
         `${selectedTodos.length} todos completed`
       );
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
+      const [selectedTodo] = await selectTodos([
+        ...todoRepository.todos.values()
+      ]);
+      if (!selectedTodo) {
+        return;
+      }
+
+      const warningOptions = ['Delete it', 'Cancel'];
+      const selectedOption = await vscode.window.showWarningMessage(
+        `This will delete: ${selectedTodo.title} todo`,
+        ...warningOptions
+      );
+
+      if (selectedOption === warningOptions[0]) {
+        await todoRepository.delete(selectedTodo.id);
+        vscode.window.showInformationMessage(
+          `Deleted todo: ${selectedTodo.title}`
+        );
+      }
     })
   );
 }

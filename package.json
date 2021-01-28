@@ -13,7 +13,8 @@
     "onCommand:voltdev.todo.test",
     "onCommand:voltdev.todo.new",
     "onCommand:voltdev.todo.edit",
-    "onCommand:voltdev.todo.complete"
+    "onCommand:voltdev.todo.complete",
+    "onCommand:voltdev.todo.delete"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -32,6 +33,11 @@
         "command": "voltdev.todo.complete",
         "category": "Voltdev",
         "title": "Complete Todo"
+      },
+      {
+        "command": "voltdev.todo.delete",
+        "category": "Voltdev",
+        "title": "Delete Todo"
       },
       {
         "command": "voltdev.todo.test",
