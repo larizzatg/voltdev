@@ -28,3 +28,60 @@ export async function createTodo(): Promise<TodoInput> {
     description
   };
 }
+
+export async function editTodo(
+  input: TodoInput
+): Promise<TodoInput | undefined> {
+  const title = await vscode.window.showInputBox({
+    prompt: 'Edit the title of your todo',
+    value: input.title,
+    validateInput: (value: string) => {
+      if (value.trim() === '') {
+        return 'The title cannot be empty';
+      }
+      return null;
+    }
+  });
+
+  if (!title) {
+    return Promise.resolve(undefined);
+  }
+
+  const description =
+    (await vscode.window.showInputBox({
+      prompt: 'Edit the description of your todo',
+      value: input.description
+    })) || '';
+
+  return {
+    title,
+    description
+  };
+}
+
+export function selectTodo(todos: Todo[]): Promise<Todo | undefined> {
+  return new Promise((resolve) => {
+    let todo: Todo | undefined = undefined;
+    const quickPick = vscode.window.createQuickPick<TodoQuickPick>();
+    quickPick.items = todos
+      .filter((todo) => !todo.done)
+      .map(
+        (todo) =>
+          ({
+            label: todo.title,
+            description: todo.description,
+            detail: '',
+            todo
+          } as TodoQuickPick)
+      );
+    quickPick.title = 'List of todo';
+    quickPick.onDidChangeSelection(() => {
+      todo = quickPick.selectedItems[0].todo;
+      quickPick.hide();
+    });
+    quickPick.onDidHide(() => {
+      resolve(todo);
+    });
+    quickPick.show();
+  });
+}
