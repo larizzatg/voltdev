@@ -10,8 +10,10 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_NEW, async () => {
       const inputs = await createTodo();
-      await todoRepository.add(inputs);
-      vscode.window.showInformationMessage('New todo created');
+      if (inputs) {
+        await todoRepository.add(inputs);
+        vscode.window.showInformationMessage('New todo created');
+      }
     })
   );
 

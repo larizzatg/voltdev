@@ -8,13 +8,19 @@ type TodoQuickPick = {
   detail: string;
 };
 
-export async function createTodo(): Promise<TodoInput> {
+export async function createTodo(): Promise<TodoInput | undefined> {
   const title = await vscode.window.showInputBox({
-    prompt: 'Write the title of your new todo'
+    prompt: 'Write the title of your new todo',
+    validateInput: (value: string) => {
+      if (value.trim() === '') {
+        return 'The title cannot be empty';
+      }
+      return null;
+    }
   });
 
   if (!title) {
-    return Promise.reject('User cancel the todo creation');
+    return Promise.resolve(undefined);
   }
 
   const description =
