@@ -17,8 +17,10 @@ function manageTodoCommands(
     vscode.commands.registerCommand(CommandType.TODO_NEW, async () => {
       const inputs = await createTodo();
       if (inputs) {
-        await todoRepository.add(inputs);
-        vscode.window.showInformationMessage('New todo created');
+        const todo = await todoRepository.add(inputs);
+        vscode.window.showInformationMessage(
+          `🎉 New todo created: ${todo.title}`
+        );
       }
     })
   );
@@ -44,6 +46,11 @@ function manageTodoCommands(
         [...todoRepository.todos.values()],
         { canSelectMany: true, title: "Let's slash some todos" }
       );
+
+      if (selectTodos.length === 0) {
+        return;
+      }
+
       await Promise.all(
         selectedTodos.map((todo) => todoRepository.complete(todo.id))
       );
