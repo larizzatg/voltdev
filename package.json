@@ -10,11 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:voltdev.todo.test",
-    "onCommand:voltdev.todo.new",
-    "onCommand:voltdev.todo.edit",
-    "onCommand:voltdev.todo.complete",
-    "onCommand:voltdev.todo.delete"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -40,9 +36,14 @@
         "title": "Delete Todo"
       },
       {
-        "command": "voltdev.todo.test",
+        "command": "voltdev.work-session.start",
         "category": "Voltdev",
-        "title": "Test todo"
+        "title": "Work Session -> Start"
+      },
+      {
+        "command": "voltdev.state.clear",
+        "category": "Voltdev",
+        "title": "Clear State"
       }
     ]
   },
