@@ -8,7 +8,7 @@ import { WorkSessionRepository } from './repositories/WorkSessionRepository';
 export function activate(context: vscode.ExtensionContext): void {
   const todoRepository = new TodoRepository(context);
   const workSessionRepository = new WorkSessionRepository(context);
-  manageTodoCommands(context, todoRepository);
+  manageTodoCommands(context, todoRepository, workSessionRepository);
   manageWorkSessionCommands(context, workSessionRepository, todoRepository);
 
   context.subscriptions.push(
@@ -22,7 +22,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
 function manageTodoCommands(
   context: vscode.ExtensionContext,
-  todoRepository: TodoRepository
+  todoRepository: TodoRepository,
+  workSessionRepository: WorkSessionRepository
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_NEW, async () => {
@@ -88,6 +89,7 @@ function manageTodoCommands(
 
       if (selectedOption === warningOptions[0]) {
         await todoRepository.delete(selectedTodo.id);
+        await workSessionRepository.deleteTodo(selectedTodo.id);
         vscode.window.showInformationMessage(
           `Deleted todo: ${selectedTodo.title}`
         );
@@ -125,7 +127,6 @@ function manageWorkSessionCommands(
             CommandType.WORK_SESSION_SET_ACTIVE_TASK
           );
         }
-        console.log('as');
       }
     )
   );

@@ -49,6 +49,14 @@ export class WorkSessionRepository {
     await this.updateState();
   }
 
+  async deleteTodo(id: string): Promise<void> {
+    if (!this.session) {
+      return Promise.resolve();
+    }
+    this.session.todos.delete(id);
+    await this.updateState();
+  }
+
   getState(): WorkSession | undefined {
     const workSessionState = WorkSessionRepository.state.get<WorkSessionState>(
       STORAGE_KEY_WORK_SESSION_ACTIVE
