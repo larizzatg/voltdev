@@ -54,6 +54,15 @@ export class WorkSessionRepository {
       return Promise.resolve();
     }
     this.session.todos.delete(id);
+
+    if (this.session.activeTodoId == id) {
+      this.session.activeTodoId = undefined;
+    }
+
+    if (this.session.mostImportantTodoId == id) {
+      this.session.mostImportantTodoId = undefined;
+    }
+
     await this.updateState();
   }
 
