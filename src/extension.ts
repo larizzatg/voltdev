@@ -6,7 +6,13 @@ import { TodoInput } from './entities/Todo';
 
 export function activate(context: vscode.ExtensionContext): void {
   const todoRepository = new TodoRepository(context);
+  manageTodoCommands(context, todoRepository);
+}
 
+function manageTodoCommands(
+  context: vscode.ExtensionContext,
+  todoRepository: TodoRepository
+) {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_NEW, async () => {
       const inputs = await createTodo();
