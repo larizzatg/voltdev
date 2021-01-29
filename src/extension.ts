@@ -3,7 +3,6 @@ import { TodoRepository } from './repositories/TodoRepository';
 import { createTodo, editTodo, selectTodos } from './commands/todos';
 import { CommandType } from './commands/CommandType';
 import { TodoInput } from './entities/Todo';
-import { warn } from 'console';
 
 export function activate(context: vscode.ExtensionContext): void {
   const todoRepository = new TodoRepository(context);
