@@ -88,6 +88,11 @@ export class WorkSessionManager {
     return Promise.resolve(todo);
   }
 
+  getActiveTask(): Todo | undefined {
+    const activeTaskID = this.state.workSession.session?.activeTodoId || '';
+    return this.state.todos.todos.get(activeTaskID);
+  }
+
   private getWorkSessionTodos(): Todo[] {
     const todos: Todo[] = [];
     if (

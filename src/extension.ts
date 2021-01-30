@@ -6,10 +6,10 @@ import { WorkSessionRepository } from './repositories/WorkSessionRepository';
 import { TodoManager } from './manager/TodoManager';
 import { WorkSessionManager } from './manager/WorkSessionManager';
 import { ExtensionState } from './repositories/ExtensionState';
-
-let statusBarActiveTask: vscode.StatusBarItem;
+import { StatusBar } from './ui';
 
 export function activate(context: vscode.ExtensionContext): void {
+  const statusBar = new StatusBar();
   const state: ExtensionState = {
     todos: new TodoRepository(context),
     workSession: new WorkSessionRepository(context)
@@ -18,10 +18,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const todoManager = new TodoManager(state);
   const workSessionManager = new WorkSessionManager(state);
 
-  statusBarActiveTask = createActiveTaskStatusBar();
-  context.subscriptions.push(statusBarActiveTask);
-
-  updateActiveTaskStatusBar(state.todos, state.workSession);
+  context.subscriptions.push(statusBar);
+  statusBar.update(workSessionManager.getActiveTask());
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.CLEAR_STATE, async () => {
@@ -52,7 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
       await todoManager.deleteTodo();
-      updateActiveTaskStatusBar(state.todos, state.workSession);
+      statusBar.update(workSessionManager.getActiveTask());
     })
   );
   context.subscriptions.push(
@@ -78,7 +76,7 @@ export function activate(context: vscode.ExtensionContext): void {
       CommandType.WORK_SESSION_SET_ACTIVE_TASK,
       async (): Promise<Todo | undefined> => {
         const todo = await workSessionManager.setActiveTask();
-        updateActiveTaskStatusBar(state.todos, state.workSession);
+        statusBar.update(workSessionManager.getActiveTask());
         return todo;
       }
     )
@@ -87,52 +85,9 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
       await workSessionManager.finishWorkSession();
-      updateActiveTaskStatusBar(state.todos, state.workSession);
+      statusBar.update(workSessionManager.getActiveTask());
     })
   );
-}
-
-function createActiveTaskStatusBar(): vscode.StatusBarItem {
-  const bar = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right,
-    10
-  );
-  bar.color = new vscode.ThemeColor('terminal.ansiBrightYellow');
-  return bar;
-}
-
-function updateActiveTaskStatusBar(
-  todoRepository: TodoRepository,
-  workSessionRepository: WorkSessionRepository
-): void {
-  if (
-    !workSessionRepository.session ||
-    !workSessionRepository.session.activeTodoId
-  ) {
-    statusBarActiveTask.hide();
-    return;
-  }
-
-  const activeTask = todoRepository.todos.get(
-    workSessionRepository.session.activeTodoId
-  );
-  if (!activeTask) {
-    statusBarActiveTask.hide();
-    return;
-  }
-
-  const MAX_LENGTH = 20;
-  let title = activeTask.title;
-  let description = activeTask.description;
-
-  if (activeTask.title.length > MAX_LENGTH) {
-    title = `${activeTask.title.slice(0, MAX_LENGTH)}...`;
-    description = activeTask.title;
-  }
-
-  statusBarActiveTask.text = `⚡ Active Task: ${title}`;
-  statusBarActiveTask.tooltip = `${description}`;
-  statusBarActiveTask.show();
 }
 
 // this method is called when your extension is deactivated
