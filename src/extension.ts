@@ -155,7 +155,19 @@ function manageWorkSessionCommands(
     vscode.commands.registerCommand(
       CommandType.WORK_SESSION_SET_MIT,
       async (): Promise<Todo | undefined> => {
-        const [todo] = await selectTodos([...todoRepository.todos.values()], {
+        if (
+          !workSessionRepository.session ||
+          workSessionRepository.session.todos.size === 0
+        ) {
+          return Promise.reject(
+            'You need to have a session to set the most important task'
+          );
+        }
+        const workSessionTodos: Todo[] = await getWorkSessionTodos(
+          workSessionRepository,
+          todoRepository
+        );
+        const [todo] = await selectTodos(workSessionTodos, {
           title: 'Select your most important task of this session',
           placeholder: 'Hit (Enter/Esc) to cancel'
         });
@@ -174,7 +186,11 @@ function manageWorkSessionCommands(
     vscode.commands.registerCommand(
       CommandType.WORK_SESSION_SET_ACTIVE_TASK,
       async (): Promise<Todo | undefined> => {
-        const [todo] = await selectTodos([...todoRepository.todos.values()], {
+        const workSessionTodos: Todo[] = await getWorkSessionTodos(
+          workSessionRepository,
+          todoRepository
+        );
+        const [todo] = await selectTodos(workSessionTodos, {
           title: 'Which task do you want to work first?',
           placeholder: 'Hit (Enter/Esc) to cancel'
         });
@@ -188,6 +204,33 @@ function manageWorkSessionCommands(
       }
     )
   );
+}
+
+function getWorkSessionTodos(
+  workSessionRepository: WorkSessionRepository,
+  todoRepository: TodoRepository
+): Promise<Todo[]> {
+  const todos: Todo[] = [];
+  if (
+    !workSessionRepository.session ||
+    workSessionRepository.session.todos.size == 0
+  ) {
+    return Promise.resolve(todos);
+  }
+
+  if (todoRepository.todos.size == 0) {
+    return Promise.resolve(todos);
+  }
+
+  workSessionRepository.session.todos.forEach((id) => {
+    const todo = todoRepository.todos.get(id);
+
+    if (todo) {
+      todos.push(todo);
+    }
+  });
+
+  return Promise.resolve(todos);
 }
 
 // this method is called when your extension is deactivated
