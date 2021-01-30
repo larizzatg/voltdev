@@ -146,6 +146,14 @@ function manageTodoCommands(
       }
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
+      // todo generate work session analytics and save it
+      await workSessionRepository.finisWorkSession();
+      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+    })
+  );
 }
 
 function manageWorkSessionCommands(

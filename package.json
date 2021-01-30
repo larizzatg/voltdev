@@ -41,6 +41,11 @@
         "title": "Work Session -> Start"
       },
       {
+        "command": "voltdev.work-session.end",
+        "category": "Voltdev",
+        "title": "Work Session -> End"
+      },
+      {
         "command": "voltdev.state.clear",
         "category": "Voltdev",
         "title": "Clear State"

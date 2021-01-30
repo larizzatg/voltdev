@@ -25,6 +25,15 @@ export class WorkSessionRepository {
     await this.updateState();
   }
 
+  async finisWorkSession(): Promise<void> {
+    if (!this.session) {
+      return Promise.reject(ERROR_SESSION_EMPTY);
+    }
+
+    this.session.finishedAt = new Date();
+    await this.clearState();
+  }
+
   async setMostImportantTodo(id: string): Promise<void> {
     if (!this.session) {
       return Promise.reject(ERROR_SESSION_EMPTY);
