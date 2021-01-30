@@ -1,17 +1,22 @@
 import * as vscode from 'vscode';
 import { TodoRepository } from './repositories/TodoRepository';
-import { createTodo, editTodo, selectTodos } from './commands/todos';
+import { selectTodos } from './commands/todos';
 import { CommandType } from './commands/CommandType';
-import { Todo, TodoInput } from './entities/Todo';
+import { Todo } from './entities/Todo';
 import { WorkSessionRepository } from './repositories/WorkSessionRepository';
+import { TodoManager } from './manager/TodoManager';
 
 let statusBarActiveTask: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext): void {
   const todoRepository = new TodoRepository(context);
   const workSessionRepository = new WorkSessionRepository(context);
-  manageTodoCommands(context, todoRepository, workSessionRepository);
   manageWorkSessionCommands(context, workSessionRepository, todoRepository);
+
+  const todoManager = new TodoManager({
+    todos: todoRepository,
+    workSession: workSessionRepository
+  });
 
   statusBarActiveTask = createActiveTaskStatusBar();
   context.subscriptions.push(statusBarActiveTask);
@@ -22,6 +27,30 @@ export function activate(context: vscode.ExtensionContext): void {
       await todoRepository.clearState();
       await workSessionRepository.clearState();
       await vscode.window.showInformationMessage('Cleared state');
+    })
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_NEW, () =>
+      todoManager.createTodo()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_EDIT, () =>
+      todoManager.editTodo()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
+      todoManager.completeTodo();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
+      await todoManager.deleteTodo();
+      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
     })
   );
 }
@@ -67,93 +96,6 @@ function updateActiveTaskStatusBar(
   statusBarActiveTask.text = `⚡ Active Task: ${title}`;
   statusBarActiveTask.tooltip = `${description}`;
   statusBarActiveTask.show();
-}
-
-function manageTodoCommands(
-  context: vscode.ExtensionContext,
-  todoRepository: TodoRepository,
-  workSessionRepository: WorkSessionRepository
-) {
-  context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.TODO_NEW, async () => {
-      const inputs = await createTodo();
-      if (inputs) {
-        const todo = await todoRepository.add(inputs);
-        vscode.window.showInformationMessage(
-          `🎉 New todo created: ${todo.title}`
-        );
-      }
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.TODO_EDIT, async () => {
-      const [selectedTodo] = await selectTodos([
-        ...todoRepository.todos.values()
-      ]);
-      if (!selectedTodo) {
-        return;
-      }
-      const editedInputs = await editTodo(selectedTodo as TodoInput);
-      if (editedInputs) {
-        await todoRepository.edit(editedInputs, selectedTodo.id);
-      }
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
-      const selectedTodos = await selectTodos(
-        [...todoRepository.todos.values()],
-        { canSelectMany: true, title: "Let's slash some todos" }
-      );
-
-      if (selectTodos.length === 0) {
-        return;
-      }
-
-      await Promise.all(
-        selectedTodos.map((todo) => todoRepository.complete(todo.id))
-      );
-      vscode.window.showInformationMessage(
-        `${selectedTodos.length} todos completed`
-      );
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
-      const [selectedTodo] = await selectTodos([
-        ...todoRepository.todos.values()
-      ]);
-      if (!selectedTodo) {
-        return;
-      }
-
-      const warningOptions = ['Delete it', 'Cancel'];
-      const selectedOption = await vscode.window.showWarningMessage(
-        `This will delete: ${selectedTodo.title} todo`,
-        ...warningOptions
-      );
-
-      if (selectedOption === warningOptions[0]) {
-        await todoRepository.delete(selectedTodo.id);
-        await workSessionRepository.deleteTodo(selectedTodo.id);
-        updateActiveTaskStatusBar(todoRepository, workSessionRepository);
-        vscode.window.showInformationMessage(
-          `Deleted todo: ${selectedTodo.title}`
-        );
-      }
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
-      // todo generate work session analytics and save it
-      await workSessionRepository.finisWorkSession();
-      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
-    })
-  );
 }
 
 function manageWorkSessionCommands(
@@ -261,6 +203,14 @@ function manageWorkSessionCommands(
         return Promise.resolve(undefined);
       }
     )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
+      // todo generate work session analytics and save it
+      await workSessionRepository.finisWorkSession();
+      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+    })
   );
 }
 
