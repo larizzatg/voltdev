@@ -5,15 +5,20 @@ import { CommandType } from './commands/CommandType';
 import { Todo } from './entities/Todo';
 import { WorkSessionRepository } from './repositories/WorkSessionRepository';
 import { TodoManager } from './manager/TodoManager';
+import { WorkSessionManager } from './manager/WorkSessionManager';
 
 let statusBarActiveTask: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext): void {
   const todoRepository = new TodoRepository(context);
   const workSessionRepository = new WorkSessionRepository(context);
-  manageWorkSessionCommands(context, workSessionRepository, todoRepository);
 
   const todoManager = new TodoManager({
+    todos: todoRepository,
+    workSession: workSessionRepository
+  });
+
+  const workSessionManager = new WorkSessionManager({
     todos: todoRepository,
     workSession: workSessionRepository
   });
@@ -22,6 +27,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(statusBarActiveTask);
 
   updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.CLEAR_STATE, async () => {
       await todoRepository.clearState();
@@ -29,6 +35,7 @@ export function activate(context: vscode.ExtensionContext): void {
       await vscode.window.showInformationMessage('Cleared state');
     })
   );
+
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_NEW, () =>
       todoManager.createTodo()
@@ -50,6 +57,41 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
       await todoManager.deleteTodo();
+      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+    })
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.WORK_SESSION_START, () => {
+      workSessionManager.startWorkSession();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.WORK_SESSION_ADD_TASKS, () => {
+      return workSessionManager.addTasks();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.WORK_SESSION_SET_MIT, () => {
+      return workSessionManager.setMostImportantTask();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      CommandType.WORK_SESSION_SET_ACTIVE_TASK,
+      async (): Promise<Todo | undefined> => {
+        const todo = await workSessionManager.setActiveTask();
+        updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+        return todo;
+      }
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
+      await workSessionManager.finishWorkSession();
       updateActiveTaskStatusBar(todoRepository, workSessionRepository);
     })
   );
@@ -96,149 +138,6 @@ function updateActiveTaskStatusBar(
   statusBarActiveTask.text = `⚡ Active Task: ${title}`;
   statusBarActiveTask.tooltip = `${description}`;
   statusBarActiveTask.show();
-}
-
-function manageWorkSessionCommands(
-  context: vscode.ExtensionContext,
-  workSessionRepository: WorkSessionRepository,
-  todoRepository: TodoRepository
-) {
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      CommandType.WORK_SESSION_START,
-      async () => {
-        await workSessionRepository.startWorkSession();
-        const todos = await vscode.commands.executeCommand<Todo[]>(
-          CommandType.WORK_SESSION_ADD_TASKS
-        );
-        if (!todos || !todos.length) {
-          return;
-        }
-        await vscode.commands.executeCommand<Todo | undefined>(
-          CommandType.WORK_SESSION_SET_MIT
-        );
-        const options = ['Choose a task 👨‍💻', 'Nah, later 🦥'];
-        const selectedOption = await vscode.window.showInformationMessage(
-          'Do you want to start working on a task?',
-          ...options
-        );
-        if (selectedOption === options[0]) {
-          await vscode.commands.executeCommand(
-            CommandType.WORK_SESSION_SET_ACTIVE_TASK
-          );
-        }
-      }
-    )
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      CommandType.WORK_SESSION_ADD_TASKS,
-      async (): Promise<Todo[]> => {
-        const todos = await selectTodos([...todoRepository.todos.values()], {
-          canSelectMany: true,
-          title: 'Choose the tasks for your work session',
-          placeholder: 'Hit (Enter/Esc) to start a work session without tasks'
-        });
-
-        if (todos.length > 0) {
-          const ids = todos.map((todo) => todo.id);
-          await workSessionRepository.addTodos(ids);
-        }
-
-        return Promise.resolve(todos);
-      }
-    )
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      CommandType.WORK_SESSION_SET_MIT,
-      async (): Promise<Todo | undefined> => {
-        if (
-          !workSessionRepository.session ||
-          workSessionRepository.session.todos.size === 0
-        ) {
-          return Promise.reject(
-            'You need to have a session to set the most important task'
-          );
-        }
-        const workSessionTodos: Todo[] = await getWorkSessionTodos(
-          workSessionRepository,
-          todoRepository
-        );
-        const [todo] = await selectTodos(workSessionTodos, {
-          title: 'Select your most important task of this session',
-          placeholder: 'Hit (Enter/Esc) to cancel'
-        });
-
-        if (todo) {
-          await workSessionRepository.setMostImportantTodo(todo.id);
-          return Promise.resolve(todo);
-        }
-
-        return Promise.resolve(undefined);
-      }
-    )
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      CommandType.WORK_SESSION_SET_ACTIVE_TASK,
-      async (): Promise<Todo | undefined> => {
-        const workSessionTodos: Todo[] = await getWorkSessionTodos(
-          workSessionRepository,
-          todoRepository
-        );
-        const [todo] = await selectTodos(workSessionTodos, {
-          title: 'Which task do you want to work first?',
-          placeholder: 'Hit (Enter/Esc) to cancel'
-        });
-
-        if (todo) {
-          await workSessionRepository.setActiveTodo(todo.id);
-          updateActiveTaskStatusBar(todoRepository, workSessionRepository);
-          return Promise.resolve(todo);
-        }
-        return Promise.resolve(undefined);
-      }
-    )
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
-      // todo generate work session analytics and save it
-      await workSessionRepository.finisWorkSession();
-      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
-    })
-  );
-}
-
-function getWorkSessionTodos(
-  workSessionRepository: WorkSessionRepository,
-  todoRepository: TodoRepository
-): Promise<Todo[]> {
-  const todos: Todo[] = [];
-  if (
-    !workSessionRepository.session ||
-    workSessionRepository.session.todos.size == 0
-  ) {
-    return Promise.resolve(todos);
-  }
-
-  if (todoRepository.todos.size == 0) {
-    return Promise.resolve(todos);
-  }
-
-  workSessionRepository.session.todos.forEach((id) => {
-    const todo = todoRepository.todos.get(id);
-
-    if (todo) {
-      todos.push(todo);
-    }
-  });
-
-  return Promise.resolve(todos);
 }
 
 // this method is called when your extension is deactivated
