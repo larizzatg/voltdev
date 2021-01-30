@@ -2,8 +2,12 @@
   "name": "voltdev",
   "publisher": "larizzatg",
   "displayName": "voltdev",
-  "description": "",
+  "description": "Virtual assistant for developers helping ease the burden of daily tasks",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/larizzatg/voltdev"
+  },
   "engines": {
     "vscode": "^1.52.0"
   },
@@ -18,37 +22,37 @@
     "commands": [
       {
         "command": "voltdev.todo.new",
-        "category": "Voltdev",
-        "title": "New Todo"
+        "category": "⚡ Voltdev",
+        "title": "Todo -> New"
       },
       {
         "command": "voltdev.todo.edit",
-        "category": "Voltdev",
-        "title": "Edit Todo"
+        "category": "⚡ Voltdev",
+        "title": "Todo -> Edit"
       },
       {
         "command": "voltdev.todo.complete",
-        "category": "Voltdev",
-        "title": "Complete Todo"
+        "category": "⚡ Voltdev",
+        "title": "Todo -> Complete"
       },
       {
         "command": "voltdev.todo.delete",
-        "category": "Voltdev",
-        "title": "Delete Todo"
+        "category": "⚡ Voltdev",
+        "title": "Todo -> Delete"
       },
       {
         "command": "voltdev.work-session.start",
-        "category": "Voltdev",
+        "category": "⚡ Voltdev",
         "title": "Work Session -> Start"
       },
       {
         "command": "voltdev.work-session.end",
-        "category": "Voltdev",
+        "category": "⚡ Voltdev",
         "title": "Work Session -> End"
       },
       {
         "command": "voltdev.state.clear",
-        "category": "Voltdev",
+        "category": "⚡ Voltdev",
         "title": "Clear State"
       }
     ]
