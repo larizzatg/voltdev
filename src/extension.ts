@@ -5,12 +5,18 @@ import { CommandType } from './commands/CommandType';
 import { Todo, TodoInput } from './entities/Todo';
 import { WorkSessionRepository } from './repositories/WorkSessionRepository';
 
+let statusBarActiveTask: vscode.StatusBarItem;
+
 export function activate(context: vscode.ExtensionContext): void {
   const todoRepository = new TodoRepository(context);
   const workSessionRepository = new WorkSessionRepository(context);
   manageTodoCommands(context, todoRepository, workSessionRepository);
   manageWorkSessionCommands(context, workSessionRepository, todoRepository);
 
+  statusBarActiveTask = createActiveTaskStatusBar();
+  context.subscriptions.push(statusBarActiveTask);
+
+  updateActiveTaskStatusBar(todoRepository, workSessionRepository);
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.CLEAR_STATE, async () => {
       await todoRepository.clearState();
@@ -18,6 +24,49 @@ export function activate(context: vscode.ExtensionContext): void {
       await vscode.window.showInformationMessage('Cleared state');
     })
   );
+}
+
+function createActiveTaskStatusBar(): vscode.StatusBarItem {
+  const bar = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    10
+  );
+  bar.color = new vscode.ThemeColor('terminal.ansiBrightYellow');
+  return bar;
+}
+
+function updateActiveTaskStatusBar(
+  todoRepository: TodoRepository,
+  workSessionRepository: WorkSessionRepository
+): void {
+  if (
+    !workSessionRepository.session ||
+    !workSessionRepository.session.activeTodoId
+  ) {
+    statusBarActiveTask.hide();
+    return;
+  }
+
+  const activeTask = todoRepository.todos.get(
+    workSessionRepository.session.activeTodoId
+  );
+  if (!activeTask) {
+    statusBarActiveTask.hide();
+    return;
+  }
+
+  const MAX_LENGTH = 20;
+  let title = activeTask.title;
+  let description = activeTask.description;
+
+  if (activeTask.title.length > MAX_LENGTH) {
+    title = `${activeTask.title.slice(0, MAX_LENGTH)}...`;
+    description = activeTask.title;
+  }
+
+  statusBarActiveTask.text = `⚡ Active Task: ${title}`;
+  statusBarActiveTask.tooltip = `${description}`;
+  statusBarActiveTask.show();
 }
 
 function manageTodoCommands(
@@ -90,6 +139,7 @@ function manageTodoCommands(
       if (selectedOption === warningOptions[0]) {
         await todoRepository.delete(selectedTodo.id);
         await workSessionRepository.deleteTodo(selectedTodo.id);
+        updateActiveTaskStatusBar(todoRepository, workSessionRepository);
         vscode.window.showInformationMessage(
           `Deleted todo: ${selectedTodo.title}`
         );
@@ -197,9 +247,9 @@ function manageWorkSessionCommands(
 
         if (todo) {
           await workSessionRepository.setActiveTodo(todo.id);
+          updateActiveTaskStatusBar(todoRepository, workSessionRepository);
           return Promise.resolve(todo);
         }
-
         return Promise.resolve(undefined);
       }
     )
