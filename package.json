@@ -3,7 +3,7 @@
   "publisher": "larizzatg",
   "displayName": "voltdev",
   "description": "Virtual assistant for developers helping ease the burden of daily tasks",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/larizzatg/voltdev"
@@ -54,8 +54,27 @@
         "command": "voltdev.state.clear",
         "category": "⚡ Voltdev",
         "title": "Clear State"
+      },
+      {
+        "command": "voltdev.stack-overflow.search",
+        "category": "⚡ Voltdev",
+        "title": "Search in stack overflow"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "voltdev.stack-overflow.search",
+          "when": "editorHasSelection"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "voltdev.stack-overflow.search",
+          "when": "editorHasSelection"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
