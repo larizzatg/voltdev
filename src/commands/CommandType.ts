@@ -8,5 +8,6 @@ export enum CommandType {
   WORK_SESSION_END = 'voltdev.work-session.end',
   WORK_SESSION_ADD_TASKS = 'voltdev.work-session.tasks.add',
   WORK_SESSION_SET_MIT = 'voltdev.work-session.tasks.mit',
-  WORK_SESSION_SET_ACTIVE_TASK = 'voltdev.work-session.tasks.active'
+  WORK_SESSION_SET_ACTIVE_TASK = 'voltdev.work-session.tasks.active',
+  STACK_OVERFLOW_SEARCH = 'voltdev.stack-overflow.search'
 }

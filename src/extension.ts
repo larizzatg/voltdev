@@ -3,10 +3,11 @@ import { TodoRepository } from './repositories/TodoRepository';
 import { CommandType } from './commands/CommandType';
 import { Todo } from './entities/Todo';
 import { WorkSessionRepository } from './repositories/WorkSessionRepository';
-import { TodoManager } from './manager/TodoManager';
-import { WorkSessionManager } from './manager/WorkSessionManager';
+import { TodoManager } from './managers/TodoManager';
+import { WorkSessionManager } from './managers/WorkSessionManager';
 import { ExtensionState } from './repositories/ExtensionState';
 import { StatusBar } from './ui';
+import { StackOverflowManager } from './managers/StackOverflowManager';
 
 export function activate(context: vscode.ExtensionContext): void {
   const statusBar = new StatusBar();
@@ -17,6 +18,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const todoManager = new TodoManager(state);
   const workSessionManager = new WorkSessionManager(state);
+  const stackOverflowManager = new StackOverflowManager();
 
   context.subscriptions.push(statusBar);
   statusBar.update(workSessionManager.getActiveTask());
@@ -86,6 +88,12 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
       await workSessionManager.finishWorkSession();
       statusBar.update(workSessionManager.getActiveTask());
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.STACK_OVERFLOW_SEARCH, () => {
+      stackOverflowManager.searchInBrowser();
     })
   );
 }
