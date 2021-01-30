@@ -1,37 +1,32 @@
 import * as vscode from 'vscode';
 import { TodoRepository } from './repositories/TodoRepository';
-import { selectTodos } from './commands/todos';
 import { CommandType } from './commands/CommandType';
 import { Todo } from './entities/Todo';
 import { WorkSessionRepository } from './repositories/WorkSessionRepository';
 import { TodoManager } from './manager/TodoManager';
 import { WorkSessionManager } from './manager/WorkSessionManager';
+import { ExtensionState } from './repositories/ExtensionState';
 
 let statusBarActiveTask: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext): void {
-  const todoRepository = new TodoRepository(context);
-  const workSessionRepository = new WorkSessionRepository(context);
+  const state: ExtensionState = {
+    todos: new TodoRepository(context),
+    workSession: new WorkSessionRepository(context)
+  };
 
-  const todoManager = new TodoManager({
-    todos: todoRepository,
-    workSession: workSessionRepository
-  });
-
-  const workSessionManager = new WorkSessionManager({
-    todos: todoRepository,
-    workSession: workSessionRepository
-  });
+  const todoManager = new TodoManager(state);
+  const workSessionManager = new WorkSessionManager(state);
 
   statusBarActiveTask = createActiveTaskStatusBar();
   context.subscriptions.push(statusBarActiveTask);
 
-  updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+  updateActiveTaskStatusBar(state.todos, state.workSession);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.CLEAR_STATE, async () => {
-      await todoRepository.clearState();
-      await workSessionRepository.clearState();
+      await state.todos.clearState();
+      await state.workSession.clearState();
       await vscode.window.showInformationMessage('Cleared state');
     })
   );
@@ -57,7 +52,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
       await todoManager.deleteTodo();
-      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+      updateActiveTaskStatusBar(state.todos, state.workSession);
     })
   );
   context.subscriptions.push(
@@ -83,7 +78,7 @@ export function activate(context: vscode.ExtensionContext): void {
       CommandType.WORK_SESSION_SET_ACTIVE_TASK,
       async (): Promise<Todo | undefined> => {
         const todo = await workSessionManager.setActiveTask();
-        updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+        updateActiveTaskStatusBar(state.todos, state.workSession);
         return todo;
       }
     )
@@ -92,7 +87,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
       await workSessionManager.finishWorkSession();
-      updateActiveTaskStatusBar(todoRepository, workSessionRepository);
+      updateActiveTaskStatusBar(state.todos, state.workSession);
     })
   );
 }
