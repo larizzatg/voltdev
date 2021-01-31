@@ -96,7 +96,6 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
       const analytics = await workSessionManager.finishWorkSession();
-      console.log(analytics);
       statusBar.update(workSessionManager.getActiveTask());
       vscode.window.showInformationMessage(
         `Work Session Finished: ${analytics.completedTodos}/${analytics.todos.length} tasks done`
