@@ -17,7 +17,7 @@ type TodoQuickPickOptions = {
 
 export async function createTodo(): Promise<TodoInput | undefined> {
   const title = await vscode.window.showInputBox({
-    prompt: 'Write the title of your new todo',
+    prompt: 'Write the title of your new task',
     validateInput: (value: string) => {
       if (value.trim() === '') {
         return 'The title cannot be empty';
@@ -32,7 +32,7 @@ export async function createTodo(): Promise<TodoInput | undefined> {
 
   const description =
     (await vscode.window.showInputBox({
-      prompt: 'Write the description of your new todo',
+      prompt: 'Write the description of your new task',
       placeHolder: 'Press enter to create it without a description'
     })) || '';
 
@@ -46,7 +46,7 @@ export async function editTodo(
   input: TodoInput
 ): Promise<TodoInput | undefined> {
   const title = await vscode.window.showInputBox({
-    prompt: 'Edit the title of your todo',
+    prompt: 'Edit the title of your task',
     value: input.title,
     validateInput: (value: string) => {
       if (value.trim() === '') {
@@ -62,7 +62,7 @@ export async function editTodo(
 
   const description =
     (await vscode.window.showInputBox({
-      prompt: 'Edit the description of your todo',
+      prompt: 'Edit the description of your task',
       value: input.description
     })) || '';
 
@@ -112,9 +112,9 @@ export function selectTodos(
 }
 
 export async function emptyTodoConfirmation(action?: string): Promise<boolean> {
-  const options = ['Create new todo', 'Maybe later'];
+  const options = ['Create new task', 'Maybe later'];
   const selection = await vscode.window.showInformationMessage(
-    `You don't have todos ${action ? 'to ' + action : ''}`,
+    `You don't have tasks ${action ? 'to ' + action : ''}`,
     ...options
   );
   if (selection === options[0]) {
