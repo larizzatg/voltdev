@@ -20,7 +20,7 @@ export class TodoManager {
     if (inputs) {
       const todo = await this.state.todos.add(inputs);
       vscode.window.showInformationMessage(
-        `🎉 New todo created: ${todo.title}`
+        `🎉 New task created: ${todo.title}`
       );
       return todo;
     }
@@ -62,7 +62,7 @@ export class TodoManager {
 
     const warningOptions = ['Delete it', 'Cancel'];
     const selectedOption = await vscode.window.showWarningMessage(
-      `This will delete: ${selectedTodo.title} todo`,
+      `This will delete the task: ${selectedTodo.title} `,
       ...warningOptions
     );
 
@@ -70,7 +70,7 @@ export class TodoManager {
       await this.state.todos.delete(selectedTodo.id);
       await this.state.workSession.deleteTodo(selectedTodo.id);
       vscode.window.showInformationMessage(
-        `Deleted todo: ${selectedTodo.title}`
+        `Deleted task ${selectedTodo.title}`
       );
     }
   }
@@ -85,7 +85,7 @@ export class TodoManager {
 
     const selectedTodos = await selectTodos(allTodos, {
       canSelectMany: true,
-      title: "Let's slash some todos"
+      title: "Let's slash some tasks"
     });
 
     if (selectedTodos.length === 0) {
