@@ -63,6 +63,27 @@ export async function activate(
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand(
+      CommandType.WORK_SESSION_COMPLETE_ACTIVE_TASK,
+      async () => {
+        const activeTask = workSessionManager.getActiveTask();
+        if (!activeTask) {
+          return;
+        }
+
+        const completed = await state.todos.complete(activeTask.id);
+        statusBar.update(completed);
+
+        if (completed?.done) {
+          await workSessionManager.askForActiveTask(
+            `🎉 ${completed.title} is done. \n Do you want to work on another task?`
+          );
+        }
+      }
+    )
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
       await todoManager.deleteTodo();
       statusBar.update(workSessionManager.getActiveTask());
