@@ -50,15 +50,10 @@ export async function activate(
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
-      await todoManager.completeTodo();
+      const completed = await todoManager.completeTodo();
       const activeTask = workSessionManager.getActiveTask();
       statusBar.update(activeTask);
-
-      if (activeTask?.done) {
-        await workSessionManager.askForActiveTask(
-          'Do you want to work on another task?'
-        );
-      }
+      await workSessionManager.whenTaskDone(completed);
     })
   );
 
@@ -73,12 +68,7 @@ export async function activate(
 
         const completed = await state.todos.complete(activeTask.id);
         statusBar.update(completed);
-
-        if (completed?.done) {
-          await workSessionManager.askForActiveTask(
-            `🎉 ${completed.title} is done. \n Do you want to work on another task?`
-          );
-        }
+        await workSessionManager.whenTaskDone([completed]);
       }
     )
   );
