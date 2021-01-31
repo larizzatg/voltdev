@@ -46,7 +46,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
-      todoManager.completeTodo();
+      await todoManager.completeTodo();
+      statusBar.update(workSessionManager.getActiveTask());
     })
   );
 

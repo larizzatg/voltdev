@@ -15,7 +15,7 @@ export class StatusBar {
   }
 
   update(todo: Todo | undefined): void {
-    if (!todo) {
+    if (!todo || todo.done) {
       this.statusBarActiveTask.hide();
       return;
     }
