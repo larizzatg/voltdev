@@ -42,6 +42,8 @@ export class TodoManager {
     const editedInputs = await editTodo(selectedTodo as TodoInput);
     if (editedInputs) {
       await this.state.todos.edit(editedInputs, selectedTodo.id);
+
+      vscode.window.showInformationMessage(`A task was edited`);
     }
   }
 
