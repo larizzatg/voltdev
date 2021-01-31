@@ -27,6 +27,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand(CommandType.CLEAR_STATE, async () => {
       await state.todos.clearState();
       await state.workSession.clearState();
+      await state.workSession.clearAnalytics();
       await vscode.window.showInformationMessage('Cleared state');
     })
   );
@@ -86,7 +87,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
-      await workSessionManager.finishWorkSession();
+      const analytics = await workSessionManager.finishWorkSession();
+      console.log(analytics);
       statusBar.update(workSessionManager.getActiveTask());
     })
   );

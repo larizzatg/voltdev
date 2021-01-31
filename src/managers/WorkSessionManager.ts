@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { CommandType } from '../commands/CommandType';
 import { selectTodos } from '../commands/todos';
 import { Todo } from '../entities/Todo';
+import { WorkSessionAnalytic } from '../entities/WorkSessionAnalytic';
 import { ExtensionState } from '../repositories/ExtensionState';
 
 export class WorkSessionManager {
@@ -34,8 +35,10 @@ export class WorkSessionManager {
     }
   }
 
-  async finishWorkSession(): Promise<void> {
-    await this.state.workSession.finisWorkSession();
+  async finishWorkSession(): Promise<WorkSessionAnalytic> {
+    return await this.state.workSession.finisWorkSession(
+      this.getWorkSessionTodos()
+    );
   }
 
   async addTasks(): Promise<Todo[]> {
