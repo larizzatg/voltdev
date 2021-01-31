@@ -6,11 +6,12 @@ import { WorkSession } from './entities/WorkSession';
 export class StatusBar {
   statusBarActiveTask: vscode.StatusBarItem;
   statusBarSession: vscode.StatusBarItem;
+  statusBarRest: vscode.StatusBarItem;
 
   constructor() {
     this.statusBarActiveTask = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Right,
-      10
+      15
     );
     this.statusBarActiveTask.color = new vscode.ThemeColor(
       'terminal.ansiBrightYellow'
@@ -18,8 +19,16 @@ export class StatusBar {
 
     this.statusBarSession = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Right,
-      11
+      14
     );
+
+    this.statusBarRest = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+      13
+    );
+    this.statusBarRest.command = CommandType.REST_OPEN;
+    this.statusBarRest.text = '🕓 Take a rest';
+    this.statusBarRest.show();
   }
 
   updateBarActiveTask(
@@ -69,5 +78,6 @@ export class StatusBar {
   dispose(): void {
     this.statusBarActiveTask.dispose();
     this.statusBarSession.dispose();
+    this.statusBarRest.dispose();
   }
 }
