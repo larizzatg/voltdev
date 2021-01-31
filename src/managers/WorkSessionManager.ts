@@ -34,12 +34,23 @@ export class WorkSessionManager {
 
     await this.state.workSession.startWorkSession();
     await this.updateContextActiveSession();
-    const todos = await vscode.commands.executeCommand<Todo[]>(
-      CommandType.WORK_SESSION_ADD_TASKS
-    );
+
+    if (this.state.todos.todos.size === 0) {
+      await vscode.commands.executeCommand(CommandType.TODO_NEW);
+      if (this.state.todos.todos.size === 0) {
+        return;
+      }
+    } else {
+      await vscode.commands.executeCommand<Todo[]>(
+        CommandType.WORK_SESSION_ADD_TASKS
+      );
+    }
+
+    const todos = this.getWorkSessionTodos();
     if (!todos || !todos.length) {
       return;
     }
+
     await vscode.commands.executeCommand<Todo | undefined>(
       CommandType.WORK_SESSION_SET_MIT
     );
@@ -69,6 +80,13 @@ export class WorkSessionManager {
       : undefined;
 
     if (this.state.workSession.session) {
+      if (
+        this.state.workSession.session.todos.size === 0 &&
+        todos.length === 0
+      ) {
+        return;
+      }
+
       // Update completed tasks no.
       this.state.workSession.session.doneTasks += todos.length;
 
@@ -142,9 +160,17 @@ export class WorkSessionManager {
   }
 
   async addTasks(): Promise<Todo[]> {
-    const todos = await selectTodos([...this.state.todos.todos.values()], {
+    if (!this.state.workSession.session) {
+      return [];
+    }
+
+    const allTodos = [...this.state.todos.todos.values()];
+    const todosOutOfSession = allTodos.filter(
+      (todo) => !this.state.workSession.session?.todos.has(todo.id)
+    );
+    const todos = await selectTodos(todosOutOfSession, {
       canSelectMany: true,
-      title: 'Choose the tasks for your work session',
+      title: 'Add tasks for your work session',
       placeholder: 'Hit (Enter/Esc) to start a work session without tasks'
     });
 

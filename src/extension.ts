@@ -8,6 +8,7 @@ import { WorkSessionManager } from './managers/WorkSessionManager';
 import { ExtensionState } from './repositories/ExtensionState';
 import { StatusBar } from './ui';
 import { StackOverflowManager } from './managers/StackOverflowManager';
+import { stat } from 'fs';
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -25,21 +26,32 @@ export async function activate(
   await workSessionManager.updateContextActiveSession();
 
   context.subscriptions.push(statusBar);
-  statusBar.update(workSessionManager.getActiveTask());
+  statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+  statusBar.updateBarSession(state.workSession.session);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.CLEAR_STATE, async () => {
       await state.todos.clearState();
       await state.workSession.clearState();
       await state.workSession.clearAnalytics();
+      statusBar.updateBarActiveTask(undefined);
+      statusBar.updateBarSession(state.workSession.session);
       await vscode.window.showInformationMessage('Cleared state');
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.TODO_NEW, () =>
-      todoManager.createTodo()
-    )
+    vscode.commands.registerCommand(CommandType.TODO_NEW, async () => {
+      const todo = await todoManager.createTodo();
+      if (state.workSession.session && todo) {
+        await vscode.commands.executeCommand<Todo[]>(
+          CommandType.WORK_SESSION_ADD_TASKS
+        );
+      }
+      const activeTask = workSessionManager.getActiveTask();
+      statusBar.updateBarActiveTask(activeTask);
+      statusBar.updateBarSession(state.workSession.session);
+    })
   );
 
   context.subscriptions.push(
@@ -52,8 +64,9 @@ export async function activate(
     vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
       const completed = await todoManager.completeTodo();
       const activeTask = workSessionManager.getActiveTask();
-      statusBar.update(activeTask);
+      statusBar.updateBarActiveTask(activeTask);
       await workSessionManager.whenTaskDone(completed);
+      statusBar.updateBarSession(state.workSession.session);
     })
   );
 
@@ -67,8 +80,9 @@ export async function activate(
         }
 
         const completed = await state.todos.complete(activeTask.id);
-        statusBar.update(completed);
+        statusBar.updateBarActiveTask(completed);
         await workSessionManager.whenTaskDone([completed]);
+        statusBar.updateBarSession(state.workSession.session);
       }
     )
   );
@@ -76,19 +90,29 @@ export async function activate(
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
       await todoManager.deleteTodo();
-      statusBar.update(workSessionManager.getActiveTask());
+      statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+      statusBar.updateBarSession(state.workSession.session);
     })
   );
   context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.WORK_SESSION_START, () => {
-      workSessionManager.startWorkSession();
-    })
+    vscode.commands.registerCommand(
+      CommandType.WORK_SESSION_START,
+      async () => {
+        await workSessionManager.startWorkSession();
+        statusBar.updateBarSession(state.workSession.session);
+      }
+    )
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(CommandType.WORK_SESSION_ADD_TASKS, () => {
-      return workSessionManager.addTasks();
-    })
+    vscode.commands.registerCommand(
+      CommandType.WORK_SESSION_ADD_TASKS,
+      async () => {
+        const tasks = await workSessionManager.addTasks();
+        statusBar.updateBarSession(state.workSession.session);
+        return tasks;
+      }
+    )
   );
 
   context.subscriptions.push(
@@ -102,7 +126,8 @@ export async function activate(
       CommandType.WORK_SESSION_SET_ACTIVE_TASK,
       async (): Promise<Todo | undefined> => {
         const todo = await workSessionManager.setActiveTask();
-        statusBar.update(workSessionManager.getActiveTask());
+        statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+        statusBar.updateBarSession(state.workSession.session);
         return todo;
       }
     )
@@ -111,7 +136,8 @@ export async function activate(
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
       const analytics = await workSessionManager.finishWorkSession();
-      statusBar.update(workSessionManager.getActiveTask());
+      statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+      statusBar.updateBarSession(state.workSession.session);
       vscode.window.showInformationMessage(
         `Work Session Finished: ${analytics.completedTodos}/${analytics.todos.length} tasks done`
       );

@@ -15,14 +15,16 @@ export class TodoManager {
     this.state = state;
   }
 
-  async createTodo(): Promise<void> {
+  async createTodo(): Promise<Todo | undefined> {
     const inputs = await createTodo();
     if (inputs) {
       const todo = await this.state.todos.add(inputs);
       vscode.window.showInformationMessage(
         `🎉 New todo created: ${todo.title}`
       );
+      return todo;
     }
+    return;
   }
 
   async editTodo(): Promise<void> {
