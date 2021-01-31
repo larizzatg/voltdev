@@ -15,14 +15,16 @@ export class TodoManager {
     this.state = state;
   }
 
-  async createTodo(): Promise<void> {
+  async createTodo(): Promise<Todo | undefined> {
     const inputs = await createTodo();
     if (inputs) {
       const todo = await this.state.todos.add(inputs);
       vscode.window.showInformationMessage(
         `🎉 New todo created: ${todo.title}`
       );
+      return todo;
     }
+    return;
   }
 
   async editTodo(): Promise<void> {
@@ -40,6 +42,8 @@ export class TodoManager {
     const editedInputs = await editTodo(selectedTodo as TodoInput);
     if (editedInputs) {
       await this.state.todos.edit(editedInputs, selectedTodo.id);
+
+      vscode.window.showInformationMessage(`A task was edited`);
     }
   }
 
@@ -94,13 +98,6 @@ export class TodoManager {
     const completedTodos = await Promise.all(
       selectedTodos.map((todo) => this.state.todos.complete(todo.id))
     );
-
-    const message =
-      completedTodos.length > 1
-        ? `Completed Todos: ${completedTodos.length}`
-        : `Completed Todo: ${completedTodos[0].title}`;
-    vscode.window.showInformationMessage(`🎉 ${message}`);
-
     return completedTodos;
   }
 }

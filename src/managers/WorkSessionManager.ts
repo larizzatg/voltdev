@@ -34,12 +34,23 @@ export class WorkSessionManager {
 
     await this.state.workSession.startWorkSession();
     await this.updateContextActiveSession();
-    const todos = await vscode.commands.executeCommand<Todo[]>(
-      CommandType.WORK_SESSION_ADD_TASKS
-    );
+
+    if (this.state.todos.todos.size === 0) {
+      await vscode.commands.executeCommand(CommandType.TODO_NEW);
+      if (this.state.todos.todos.size === 0) {
+        return;
+      }
+    } else {
+      await vscode.commands.executeCommand<Todo[]>(
+        CommandType.WORK_SESSION_ADD_TASKS
+      );
+    }
+
+    const todos = this.getWorkSessionTodos();
     if (!todos || !todos.length) {
       return;
     }
+
     await vscode.commands.executeCommand<Todo | undefined>(
       CommandType.WORK_SESSION_SET_MIT
     );
@@ -62,6 +73,84 @@ export class WorkSessionManager {
     }
   }
 
+  async whenTaskDone(todos: Todo[]): Promise<void> {
+    const activeTaskID = this.state.workSession.session?.activeTodoId;
+    const activeTaskDone = activeTaskID
+      ? todos.find((todo) => todo.id === activeTaskID)
+      : undefined;
+
+    if (this.state.workSession.session) {
+      if (
+        this.state.workSession.session.todos.size === 0 &&
+        todos.length === 0
+      ) {
+        return;
+      }
+
+      // Update completed tasks no.
+      this.state.workSession.session.doneTasks += todos.length;
+
+      if (
+        this.state.workSession.session.doneTasks ===
+        this.state.workSession.session.todos.size
+      ) {
+        const allDoneOptions = ['Add another task', 'Finish work session'];
+        const selectedOption = await vscode.window.showInformationMessage(
+          `🎊 All your tasks are done.`,
+          ...allDoneOptions
+        );
+
+        // Add other task
+        if (selectedOption === allDoneOptions[0]) {
+          await vscode.commands.executeCommand(CommandType.TODO_NEW);
+          await vscode.commands.executeCommand<Todo[]>(
+            CommandType.WORK_SESSION_ADD_TASKS
+          );
+          return;
+        }
+
+        if (selectedOption === allDoneOptions[1]) {
+          await vscode.commands.executeCommand(CommandType.WORK_SESSION_END);
+          return;
+        }
+      }
+    }
+
+    if (todos.length === 1 && !activeTaskDone) {
+      // Only one task done and is not active
+      await vscode.window.showInformationMessage(
+        `🎉 Completed Task: ${todos[0].title}`
+      );
+      return;
+    }
+
+    // Only one task done and it was active
+    if (todos.length === 1 && activeTaskDone) {
+      await this.askForActiveTask(
+        `🎉 Active task completed ${activeTaskDone.title}. Do you want to work on another task?`
+      );
+      return;
+    }
+
+    // More than one task done and is not active
+    if (todos.length > 1 && !activeTaskDone) {
+      await vscode.window.showInformationMessage(
+        `🎉 Completed ${todos.length} tasks.`
+      );
+      return;
+    }
+
+    // More than one task done and is has active
+    if (todos.length > 1 && activeTaskDone) {
+      await this.askForActiveTask(
+        `🎉 Active task completed with other ${
+          todos.length - 1
+        } tasks. Do yo want to work on another task?`
+      );
+      return;
+    }
+  }
+
   async finishWorkSession(): Promise<WorkSessionAnalytic> {
     const analytics = await this.state.workSession.finisWorkSession(
       this.getWorkSessionTodos()
@@ -71,9 +160,17 @@ export class WorkSessionManager {
   }
 
   async addTasks(): Promise<Todo[]> {
-    const todos = await selectTodos([...this.state.todos.todos.values()], {
+    if (!this.state.workSession.session) {
+      return [];
+    }
+
+    const allTodos = [...this.state.todos.todos.values()];
+    const todosOutOfSession = allTodos.filter(
+      (todo) => !this.state.workSession.session?.todos.has(todo.id)
+    );
+    const todos = await selectTodos(todosOutOfSession, {
       canSelectMany: true,
-      title: 'Choose the tasks for your work session',
+      title: 'Add tasks for your work session',
       placeholder: 'Hit (Enter/Esc) to start a work session without tasks'
     });
 

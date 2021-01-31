@@ -23,7 +23,8 @@ export class WorkSessionRepository {
     this.session = {
       id: uuidv4(),
       createdAt: new Date(),
-      todos: new Set()
+      todos: new Set(),
+      doneTasks: 0
     };
     await this.updateState();
   }
