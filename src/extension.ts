@@ -9,6 +9,7 @@ import { ExtensionState } from './repositories/ExtensionState';
 import { StatusBar } from './ui';
 import { StackOverflowManager } from './managers/StackOverflowManager';
 import { stat } from 'fs';
+import { RestManager } from './managers/RestManager';
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -22,6 +23,7 @@ export async function activate(
   const todoManager = new TodoManager(state);
   const workSessionManager = new WorkSessionManager(state);
   const stackOverflowManager = new StackOverflowManager();
+  const restManager = new RestManager();
 
   await workSessionManager.updateContextActiveSession();
 
@@ -168,6 +170,12 @@ export async function activate(
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.STACK_OVERFLOW_SEARCH, () => {
       stackOverflowManager.searchInBrowser();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CommandType.REST_OPEN, async () => {
+      await restManager.showRestOptions();
     })
   );
 }

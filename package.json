@@ -59,6 +59,11 @@
         "command": "voltdev.stack-overflow.search",
         "category": "⚡ Voltdev",
         "title": "Search in stack overflow"
+      },
+      {
+        "command": "voltdev.rest.open",
+        "category": "⚡ Voltdev",
+        "title": "Take a rest"
       }
     ],
     "menus": {
