@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { TodoInput, Todo } from '../entities/Todo';
+import { CommandType } from './CommandType';
 
 type TodoQuickPick = {
   todo: Todo;
@@ -89,7 +90,7 @@ export function selectTodos(
             todo
           } as TodoQuickPick)
       );
-    quickPick.title = options?.title || 'Todo list';
+    quickPick.title = options?.title || 'Todo List';
     quickPick.placeholder = options?.placeholder || '';
     quickPick.canSelectMany = options?.canSelectMany || false;
     const onSelection = () => {
@@ -108,4 +109,17 @@ export function selectTodos(
     });
     quickPick.show();
   });
+}
+
+export async function emptyTodoConfirmation(action?: string): Promise<boolean> {
+  const options = ['Create new todo', 'Maybe later'];
+  const selection = await vscode.window.showInformationMessage(
+    `You don't have todos ${action ? 'to ' + action : ''}`,
+    ...options
+  );
+  if (selection === options[0]) {
+    await vscode.commands.executeCommand<Todo[]>(CommandType.TODO_NEW);
+    return Promise.resolve(true);
+  }
+  return Promise.resolve(false);
 }

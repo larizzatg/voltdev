@@ -13,7 +13,27 @@ export class WorkSessionManager {
   }
 
   async startWorkSession(): Promise<void> {
+    if (
+      this.state.workSession.session &&
+      this.state.workSession.session.todos.size > 0
+    ) {
+      const finishSessionOptions = ['End the session', 'Cancel'];
+      const option = await vscode.window.showInformationMessage(
+        `There is a work session with ${this.state.workSession.session.todos.size} todos. Do you want to end it?`,
+        ...finishSessionOptions
+      );
+
+      if (option === finishSessionOptions[0]) {
+        return await vscode.commands.executeCommand(
+          CommandType.WORK_SESSION_END
+        );
+      } else {
+        return Promise.resolve();
+      }
+    }
+
     await this.state.workSession.startWorkSession();
+    await this.updateContextActiveSession();
     const todos = await vscode.commands.executeCommand<Todo[]>(
       CommandType.WORK_SESSION_ADD_TASKS
     );
@@ -23,9 +43,16 @@ export class WorkSessionManager {
     await vscode.commands.executeCommand<Todo | undefined>(
       CommandType.WORK_SESSION_SET_MIT
     );
+
+    await this.askForActiveTask();
+  }
+
+  async askForActiveTask(
+    question = 'Do you want to start working on a task?'
+  ): Promise<void> {
     const options = ['Choose a task 👨‍💻', 'Nah, later 🦥'];
     const selectedOption = await vscode.window.showInformationMessage(
-      'Do you want to start working on a task?',
+      question,
       ...options
     );
     if (selectedOption === options[0]) {
@@ -36,9 +63,11 @@ export class WorkSessionManager {
   }
 
   async finishWorkSession(): Promise<WorkSessionAnalytic> {
-    return await this.state.workSession.finisWorkSession(
+    const analytics = await this.state.workSession.finisWorkSession(
       this.getWorkSessionTodos()
     );
+    await this.updateContextActiveSession();
+    return analytics;
   }
 
   async addTasks(): Promise<Todo[]> {
@@ -111,5 +140,13 @@ export class WorkSessionManager {
       });
 
     return todos;
+  }
+
+  async updateContextActiveSession(): Promise<void> {
+    await vscode.commands.executeCommand(
+      'setContext',
+      'voltdev:hasActiveWorkSession',
+      Boolean(this.state.workSession.session)
+    );
   }
 }

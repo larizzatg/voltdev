@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { CommandType } from './commands/CommandType';
 import { Todo } from './entities/Todo';
 
 export class StatusBar {
@@ -15,7 +16,7 @@ export class StatusBar {
   }
 
   update(todo: Todo | undefined): void {
-    if (!todo) {
+    if (!todo || todo.done) {
       this.statusBarActiveTask.hide();
       return;
     }
@@ -29,8 +30,10 @@ export class StatusBar {
       description = todo.title;
     }
 
-    this.statusBarActiveTask.text = `⚡ Active Task: ${title}`;
+    this.statusBarActiveTask.text = `👨‍💻 Active Task: ${title}`;
     this.statusBarActiveTask.tooltip = `${description}`;
+    this.statusBarActiveTask.command =
+      CommandType.WORK_SESSION_COMPLETE_ACTIVE_TASK;
     this.statusBarActiveTask.show();
   }
 

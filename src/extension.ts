@@ -9,7 +9,9 @@ import { ExtensionState } from './repositories/ExtensionState';
 import { StatusBar } from './ui';
 import { StackOverflowManager } from './managers/StackOverflowManager';
 
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(
+  context: vscode.ExtensionContext
+): Promise<void> {
   const statusBar = new StatusBar();
   const state: ExtensionState = {
     todos: new TodoRepository(context),
@@ -19,6 +21,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const todoManager = new TodoManager(state);
   const workSessionManager = new WorkSessionManager(state);
   const stackOverflowManager = new StackOverflowManager();
+
+  await workSessionManager.updateContextActiveSession();
 
   context.subscriptions.push(statusBar);
   statusBar.update(workSessionManager.getActiveTask());
@@ -46,8 +50,37 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
-      todoManager.completeTodo();
+      await todoManager.completeTodo();
+      const activeTask = workSessionManager.getActiveTask();
+      statusBar.update(activeTask);
+
+      if (activeTask?.done) {
+        await workSessionManager.askForActiveTask(
+          'Do you want to work on another task?'
+        );
+      }
     })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      CommandType.WORK_SESSION_COMPLETE_ACTIVE_TASK,
+      async () => {
+        const activeTask = workSessionManager.getActiveTask();
+        if (!activeTask) {
+          return;
+        }
+
+        const completed = await state.todos.complete(activeTask.id);
+        statusBar.update(completed);
+
+        if (completed?.done) {
+          await workSessionManager.askForActiveTask(
+            `🎉 ${completed.title} is done. \n Do you want to work on another task?`
+          );
+        }
+      }
+    )
   );
 
   context.subscriptions.push(
@@ -88,8 +121,10 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
       const analytics = await workSessionManager.finishWorkSession();
-      console.log(analytics);
       statusBar.update(workSessionManager.getActiveTask());
+      vscode.window.showInformationMessage(
+        `Work Session Finished: ${analytics.completedTodos}/${analytics.todos.length} tasks done`
+      );
     })
   );
 

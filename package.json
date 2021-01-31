@@ -72,6 +72,10 @@
         {
           "command": "voltdev.stack-overflow.search",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "voltdev.work-session.end",
+          "when": "voltdev:hasActiveWorkSession"
         }
       ]
     }

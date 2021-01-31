@@ -79,6 +79,9 @@ export class WorkSessionRepository {
 
   async addTodos(todoIds: string[]): Promise<void> {
     if (!this.session) {
+      await this.startWorkSession();
+    }
+    if (!this.session) {
       return Promise.reject(ERROR_SESSION_EMPTY);
     }
     this.session.todos = new Set<string>([...this.session.todos, ...todoIds]);
