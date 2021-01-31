@@ -18,15 +18,18 @@ Voltdev is a virtual assistant that will help you on your daily tasks as a devel
 - Most Important Task: Choose which is your most important task
 - Active Task: Focus on one bit a time.
 
+  ![Gif of todo list and work session feature](https://github.com/larizzatg/voltdev/images/tasks.gif)
+
 **Rest**
 
 - Take a rest to feed your mind, exercise your body or connect with your soul.
+  ![Gif of rest feature](https://github.com/larizzatg/voltdev/images/rest.gif)
 
 **Stack OverFlow**
 
 - Search questions in stack overflow, the only thing you need to do is select the text and it will search in your editor language.
 
-  _Need gifs or video of extension_
+  ![Gif of stack overflow feature](https://github.com/larizzatg/voltdev/images/stackoverflow.gif)
 
 ## Installation
 
