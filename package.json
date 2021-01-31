@@ -23,22 +23,22 @@
       {
         "command": "voltdev.todo.new",
         "category": "⚡ Voltdev",
-        "title": "Todo -> New"
+        "title": "Task -> New"
       },
       {
         "command": "voltdev.todo.edit",
         "category": "⚡ Voltdev",
-        "title": "Todo -> Edit"
+        "title": "Task -> Edit"
       },
       {
         "command": "voltdev.todo.complete",
         "category": "⚡ Voltdev",
-        "title": "Todo -> Complete"
+        "title": "Task -> Complete"
       },
       {
         "command": "voltdev.todo.delete",
         "category": "⚡ Voltdev",
-        "title": "Todo -> Delete"
+        "title": "Task -> Delete"
       },
       {
         "command": "voltdev.work-session.start",
@@ -58,7 +58,7 @@
       {
         "command": "voltdev.stack-overflow.search",
         "category": "⚡ Voltdev",
-        "title": "Search in stack overflow"
+        "title": "Search in Stack Overflow"
       },
       {
         "command": "voltdev.rest.open",

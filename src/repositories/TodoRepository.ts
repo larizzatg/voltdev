@@ -34,7 +34,7 @@ export class TodoRepository {
 
   async edit(inputs: TodoInput, id: string): Promise<Todo> {
     if (!this.todos.has(id)) {
-      return Promise.reject(`The todo: ${id} doesn't exist`);
+      return Promise.reject(`The task: ${id} doesn't exist`);
     }
 
     const todo = {
@@ -66,7 +66,7 @@ export class TodoRepository {
 
   async delete(id: string): Promise<void> {
     if (!this.todos.has(id)) {
-      return Promise.reject(`The todo: ${id} doesn't exist`);
+      return Promise.reject(`The task: ${id} doesn't exist`);
     }
 
     this.todos.delete(id);
