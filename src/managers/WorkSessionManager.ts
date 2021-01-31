@@ -13,6 +13,25 @@ export class WorkSessionManager {
   }
 
   async startWorkSession(): Promise<void> {
+    if (
+      this.state.workSession.session &&
+      this.state.workSession.session.todos.size > 0
+    ) {
+      const finishSessionOptions = ['End the session', 'Cancel'];
+      const option = await vscode.window.showInformationMessage(
+        `There is a work session with ${this.state.workSession.session.todos.size} todos. Do you want to end it?`,
+        ...finishSessionOptions
+      );
+
+      if (option === finishSessionOptions[0]) {
+        return await vscode.commands.executeCommand(
+          CommandType.WORK_SESSION_END
+        );
+      } else {
+        return Promise.resolve();
+      }
+    }
+
     await this.state.workSession.startWorkSession();
     const todos = await vscode.commands.executeCommand<Todo[]>(
       CommandType.WORK_SESSION_ADD_TASKS
