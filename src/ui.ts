@@ -29,7 +29,7 @@ export class StatusBar {
       description = todo.title;
     }
 
-    this.statusBarActiveTask.text = `⚡ Active Task: ${title}`;
+    this.statusBarActiveTask.text = `👨‍💻 Active Task: ${title}`;
     this.statusBarActiveTask.tooltip = `${description}`;
     this.statusBarActiveTask.show();
   }
