@@ -5,7 +5,7 @@ import {
   emptyTodoConfirmation,
   selectTodos
 } from '../commands/todos';
-import { TodoInput } from '../entities/Todo';
+import { Todo, TodoInput } from '../entities/Todo';
 import { ExtensionState } from '../repositories/ExtensionState';
 
 export class TodoManager {
@@ -71,12 +71,12 @@ export class TodoManager {
     }
   }
 
-  async completeTodo(): Promise<void> {
+  async completeTodo(): Promise<Todo[]> {
     const allTodos = [...this.state.todos.todos.values()];
 
     if (allTodos.length === 0) {
       await emptyTodoConfirmation('complete');
-      return;
+      return [];
     }
 
     const selectedTodos = await selectTodos(allTodos, {
@@ -85,20 +85,22 @@ export class TodoManager {
     });
 
     if (selectedTodos.length === 0) {
-      return;
+      return [];
     }
 
     const ids = selectedTodos.map((todo) => todo.id);
     await this.state.workSession.addTodos(ids);
 
-    await Promise.all(
+    const completedTodos = await Promise.all(
       selectedTodos.map((todo) => this.state.todos.complete(todo.id))
     );
 
     const message =
-      selectedTodos.length > 1
-        ? `Completed Todos: ${selectedTodos.length}`
-        : `Completed Todo: ${selectedTodos[0].title}`;
+      completedTodos.length > 1
+        ? `Completed Todos: ${completedTodos.length}`
+        : `Completed Todo: ${completedTodos[0].title}`;
     vscode.window.showInformationMessage(`🎉 ${message}`);
+
+    return completedTodos;
   }
 }

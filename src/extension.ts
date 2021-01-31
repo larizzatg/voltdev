@@ -47,7 +47,14 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
       await todoManager.completeTodo();
-      statusBar.update(workSessionManager.getActiveTask());
+      const activeTask = workSessionManager.getActiveTask();
+      statusBar.update(activeTask);
+
+      if (activeTask?.done) {
+        await workSessionManager.askForActiveTask(
+          'Do you want to work on another task?'
+        );
+      }
     })
   );
 

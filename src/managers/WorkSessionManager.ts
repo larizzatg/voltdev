@@ -23,9 +23,16 @@ export class WorkSessionManager {
     await vscode.commands.executeCommand<Todo | undefined>(
       CommandType.WORK_SESSION_SET_MIT
     );
+
+    await this.askForActiveTask();
+  }
+
+  async askForActiveTask(
+    question = 'Do you want to start working on a task?'
+  ): Promise<void> {
     const options = ['Choose a task 👨‍💻', 'Nah, later 🦥'];
     const selectedOption = await vscode.window.showInformationMessage(
-      'Do you want to start working on a task?',
+      question,
       ...options
     );
     if (selectedOption === options[0]) {
