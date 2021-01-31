@@ -26,9 +26,14 @@ export class TodoManager {
   }
 
   async editTodo(): Promise<void> {
-    const [selectedTodo] = await selectTodos([
-      ...this.state.todos.todos.values()
-    ]);
+    const allTodos = [...this.state.todos.todos.values()];
+
+    if (allTodos.length === 0) {
+      await emptyTodoConfirmation('edit');
+      return;
+    }
+
+    const [selectedTodo] = await selectTodos(allTodos);
     if (!selectedTodo) {
       return;
     }

@@ -90,7 +90,7 @@ export function selectTodos(
             todo
           } as TodoQuickPick)
       );
-    quickPick.title = options?.title || 'Todo list';
+    quickPick.title = options?.title || 'Todo List';
     quickPick.placeholder = options?.placeholder || '';
     quickPick.canSelectMany = options?.canSelectMany || false;
     const onSelection = () => {
