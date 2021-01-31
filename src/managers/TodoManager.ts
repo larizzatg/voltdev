@@ -62,7 +62,7 @@ export class TodoManager {
       { canSelectMany: true, title: "Let's slash some todos" }
     );
 
-    if (selectTodos.length === 0) {
+    if (selectedTodos.length === 0) {
       return;
     }
 
