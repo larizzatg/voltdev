@@ -69,8 +69,11 @@ export class TodoManager {
     await Promise.all(
       selectedTodos.map((todo) => this.state.todos.complete(todo.id))
     );
-    vscode.window.showInformationMessage(
-      `${selectedTodos.length} todos completed`
-    );
+
+    const message =
+      selectedTodos.length > 1
+        ? `Completed Todos: ${selectedTodos.length}`
+        : `Completed Todo: ${selectedTodos[0].title}`;
+    vscode.window.showInformationMessage(`🎉 ${message}`);
   }
 }
