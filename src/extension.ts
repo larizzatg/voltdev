@@ -26,7 +26,10 @@ export async function activate(
   await workSessionManager.updateContextActiveSession();
 
   context.subscriptions.push(statusBar);
-  statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+  statusBar.updateBarActiveTask(
+    workSessionManager.getActiveTask(),
+    state.workSession.session
+  );
   statusBar.updateBarSession(state.workSession.session);
 
   context.subscriptions.push(
@@ -34,7 +37,7 @@ export async function activate(
       await state.todos.clearState();
       await state.workSession.clearState();
       await state.workSession.clearAnalytics();
-      statusBar.updateBarActiveTask(undefined);
+      statusBar.updateBarActiveTask(undefined, state.workSession.session);
       statusBar.updateBarSession(state.workSession.session);
       await vscode.window.showInformationMessage('Cleared state');
     })
@@ -49,7 +52,7 @@ export async function activate(
         );
       }
       const activeTask = workSessionManager.getActiveTask();
-      statusBar.updateBarActiveTask(activeTask);
+      statusBar.updateBarActiveTask(activeTask, state.workSession.session);
       statusBar.updateBarSession(state.workSession.session);
     })
   );
@@ -64,7 +67,7 @@ export async function activate(
     vscode.commands.registerCommand(CommandType.TODO_COMPLETE, async () => {
       const completed = await todoManager.completeTodo();
       const activeTask = workSessionManager.getActiveTask();
-      statusBar.updateBarActiveTask(activeTask);
+      statusBar.updateBarActiveTask(activeTask, state.workSession.session);
       await workSessionManager.whenTaskDone(completed);
       statusBar.updateBarSession(state.workSession.session);
     })
@@ -80,7 +83,7 @@ export async function activate(
         }
 
         const completed = await state.todos.complete(activeTask.id);
-        statusBar.updateBarActiveTask(completed);
+        statusBar.updateBarActiveTask(completed, state.workSession.session);
         await workSessionManager.whenTaskDone([completed]);
         statusBar.updateBarSession(state.workSession.session);
       }
@@ -90,7 +93,10 @@ export async function activate(
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.TODO_DELETE, async () => {
       await todoManager.deleteTodo();
-      statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+      statusBar.updateBarActiveTask(
+        workSessionManager.getActiveTask(),
+        state.workSession.session
+      );
       statusBar.updateBarSession(state.workSession.session);
     })
   );
@@ -99,6 +105,11 @@ export async function activate(
       CommandType.WORK_SESSION_START,
       async () => {
         await workSessionManager.startWorkSession();
+
+        statusBar.updateBarActiveTask(
+          workSessionManager.getActiveTask(),
+          state.workSession.session
+        );
         statusBar.updateBarSession(state.workSession.session);
       }
     )
@@ -109,6 +120,10 @@ export async function activate(
       CommandType.WORK_SESSION_ADD_TASKS,
       async () => {
         const tasks = await workSessionManager.addTasks();
+        statusBar.updateBarActiveTask(
+          workSessionManager.getActiveTask(),
+          state.workSession.session
+        );
         statusBar.updateBarSession(state.workSession.session);
         return tasks;
       }
@@ -126,7 +141,10 @@ export async function activate(
       CommandType.WORK_SESSION_SET_ACTIVE_TASK,
       async (): Promise<Todo | undefined> => {
         const todo = await workSessionManager.setActiveTask();
-        statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+        statusBar.updateBarActiveTask(
+          workSessionManager.getActiveTask(),
+          state.workSession.session
+        );
         statusBar.updateBarSession(state.workSession.session);
         return todo;
       }
@@ -136,7 +154,10 @@ export async function activate(
   context.subscriptions.push(
     vscode.commands.registerCommand(CommandType.WORK_SESSION_END, async () => {
       const analytics = await workSessionManager.finishWorkSession();
-      statusBar.updateBarActiveTask(workSessionManager.getActiveTask());
+      statusBar.updateBarActiveTask(
+        workSessionManager.getActiveTask(),
+        state.workSession.session
+      );
       statusBar.updateBarSession(state.workSession.session);
       vscode.window.showInformationMessage(
         `Work Session Finished: ${analytics.completedTodos}/${analytics.todos.length} tasks done`

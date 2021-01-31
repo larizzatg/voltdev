@@ -22,9 +22,20 @@ export class StatusBar {
     );
   }
 
-  updateBarActiveTask(todo: Todo | undefined): void {
-    if (!todo || todo.done) {
+  updateBarActiveTask(
+    todo: Todo | undefined,
+    session: WorkSession | undefined
+  ): void {
+    if (!session) {
       this.statusBarActiveTask.hide();
+      return;
+    }
+
+    if (!todo || todo.done) {
+      this.statusBarActiveTask.text = `👨‍💻 Set active task`;
+      this.statusBarActiveTask.command =
+        CommandType.WORK_SESSION_SET_ACTIVE_TASK;
+      this.statusBarActiveTask.show();
       return;
     }
 
@@ -38,7 +49,7 @@ export class StatusBar {
     }
 
     this.statusBarActiveTask.text = `👨‍💻 Active Task: ${title}`;
-    this.statusBarActiveTask.tooltip = `${description}`;
+    this.statusBarActiveTask.tooltip = `Complete Task: ${description}`;
     this.statusBarActiveTask.command =
       CommandType.WORK_SESSION_COMPLETE_ACTIVE_TASK;
     this.statusBarActiveTask.show();
