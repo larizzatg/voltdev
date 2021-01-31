@@ -66,6 +66,9 @@ export class TodoManager {
       return;
     }
 
+    const ids = selectedTodos.map((todo) => todo.id);
+    await this.state.workSession.addTodos(ids);
+
     await Promise.all(
       selectedTodos.map((todo) => this.state.todos.complete(todo.id))
     );
