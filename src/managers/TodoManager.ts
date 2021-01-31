@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
-import { createTodo, editTodo, selectTodos } from '../commands/todos';
+import {
+  createTodo,
+  editTodo,
+  emptyTodoConfirmation,
+  selectTodos
+} from '../commands/todos';
 import { TodoInput } from '../entities/Todo';
 import { ExtensionState } from '../repositories/ExtensionState';
 
@@ -57,10 +62,17 @@ export class TodoManager {
   }
 
   async completeTodo(): Promise<void> {
-    const selectedTodos = await selectTodos(
-      [...this.state.todos.todos.values()],
-      { canSelectMany: true, title: "Let's slash some todos" }
-    );
+    const allTodos = [...this.state.todos.todos.values()];
+
+    if (allTodos.length === 0) {
+      await emptyTodoConfirmation('complete');
+      return;
+    }
+
+    const selectedTodos = await selectTodos(allTodos, {
+      canSelectMany: true,
+      title: "Let's slash some todos"
+    });
 
     if (selectedTodos.length === 0) {
       return;
