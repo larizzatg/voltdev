@@ -33,6 +33,7 @@ export class WorkSessionManager {
     }
 
     await this.state.workSession.startWorkSession();
+    await this.updateContextActiveSession();
     const todos = await vscode.commands.executeCommand<Todo[]>(
       CommandType.WORK_SESSION_ADD_TASKS
     );
@@ -62,9 +63,11 @@ export class WorkSessionManager {
   }
 
   async finishWorkSession(): Promise<WorkSessionAnalytic> {
-    return await this.state.workSession.finisWorkSession(
+    const analytics = await this.state.workSession.finisWorkSession(
       this.getWorkSessionTodos()
     );
+    await this.updateContextActiveSession();
+    return analytics;
   }
 
   async addTasks(): Promise<Todo[]> {
@@ -137,5 +140,13 @@ export class WorkSessionManager {
       });
 
     return todos;
+  }
+
+  async updateContextActiveSession(): Promise<void> {
+    await vscode.commands.executeCommand(
+      'setContext',
+      'voltdev:hasActiveWorkSession',
+      Boolean(this.state.workSession.session)
+    );
   }
 }

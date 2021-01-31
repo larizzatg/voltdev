@@ -9,7 +9,9 @@ import { ExtensionState } from './repositories/ExtensionState';
 import { StatusBar } from './ui';
 import { StackOverflowManager } from './managers/StackOverflowManager';
 
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(
+  context: vscode.ExtensionContext
+): Promise<void> {
   const statusBar = new StatusBar();
   const state: ExtensionState = {
     todos: new TodoRepository(context),
@@ -19,6 +21,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const todoManager = new TodoManager(state);
   const workSessionManager = new WorkSessionManager(state);
   const stackOverflowManager = new StackOverflowManager();
+
+  await workSessionManager.updateContextActiveSession();
 
   context.subscriptions.push(statusBar);
   statusBar.update(workSessionManager.getActiveTask());
