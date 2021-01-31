@@ -3,7 +3,7 @@
   "publisher": "larizzatg",
   "displayName": "voltdev",
   "description": "Virtual assistant for developers helping ease the burden of daily tasks",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/larizzatg/voltdev"
@@ -59,6 +59,11 @@
         "command": "voltdev.stack-overflow.search",
         "category": "⚡ Voltdev",
         "title": "Search in stack overflow"
+      },
+      {
+        "command": "voltdev.rest.open",
+        "category": "⚡ Voltdev",
+        "title": "Take a rest"
       }
     ],
     "menus": {
@@ -72,6 +77,10 @@
         {
           "command": "voltdev.stack-overflow.search",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "voltdev.work-session.end",
+          "when": "voltdev:hasActiveWorkSession"
         }
       ]
     }

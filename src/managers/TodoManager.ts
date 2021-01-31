@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
-import { createTodo, editTodo, selectTodos } from '../commands/todos';
-import { TodoInput } from '../entities/Todo';
+import {
+  createTodo,
+  editTodo,
+  emptyTodoConfirmation,
+  selectTodos
+} from '../commands/todos';
+import { Todo, TodoInput } from '../entities/Todo';
 import { ExtensionState } from '../repositories/ExtensionState';
 
 export class TodoManager {
@@ -10,33 +15,47 @@ export class TodoManager {
     this.state = state;
   }
 
-  async createTodo(): Promise<void> {
+  async createTodo(): Promise<Todo | undefined> {
     const inputs = await createTodo();
     if (inputs) {
       const todo = await this.state.todos.add(inputs);
       vscode.window.showInformationMessage(
         `🎉 New todo created: ${todo.title}`
       );
+      return todo;
     }
+    return;
   }
 
   async editTodo(): Promise<void> {
-    const [selectedTodo] = await selectTodos([
-      ...this.state.todos.todos.values()
-    ]);
+    const allTodos = [...this.state.todos.todos.values()];
+
+    if (allTodos.length === 0) {
+      await emptyTodoConfirmation('edit');
+      return;
+    }
+
+    const [selectedTodo] = await selectTodos(allTodos);
     if (!selectedTodo) {
       return;
     }
     const editedInputs = await editTodo(selectedTodo as TodoInput);
     if (editedInputs) {
       await this.state.todos.edit(editedInputs, selectedTodo.id);
+
+      vscode.window.showInformationMessage(`A task was edited`);
     }
   }
 
   async deleteTodo(): Promise<void> {
-    const [selectedTodo] = await selectTodos([
-      ...this.state.todos.todos.values()
-    ]);
+    const allTodos = [...this.state.todos.todos.values()];
+
+    if (allTodos.length === 0) {
+      await emptyTodoConfirmation('delete');
+      return;
+    }
+
+    const [selectedTodo] = await selectTodos(allTodos);
     if (!selectedTodo) {
       return;
     }
@@ -56,21 +75,29 @@ export class TodoManager {
     }
   }
 
-  async completeTodo(): Promise<void> {
-    const selectedTodos = await selectTodos(
-      [...this.state.todos.todos.values()],
-      { canSelectMany: true, title: "Let's slash some todos" }
-    );
+  async completeTodo(): Promise<Todo[]> {
+    const allTodos = [...this.state.todos.todos.values()];
 
-    if (selectTodos.length === 0) {
-      return;
+    if (allTodos.length === 0) {
+      await emptyTodoConfirmation('complete');
+      return [];
     }
 
-    await Promise.all(
+    const selectedTodos = await selectTodos(allTodos, {
+      canSelectMany: true,
+      title: "Let's slash some todos"
+    });
+
+    if (selectedTodos.length === 0) {
+      return [];
+    }
+
+    const ids = selectedTodos.map((todo) => todo.id);
+    await this.state.workSession.addTodos(ids);
+
+    const completedTodos = await Promise.all(
       selectedTodos.map((todo) => this.state.todos.complete(todo.id))
     );
-    vscode.window.showInformationMessage(
-      `${selectedTodos.length} todos completed`
-    );
+    return completedTodos;
   }
 }
