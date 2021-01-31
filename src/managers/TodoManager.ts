@@ -44,9 +44,14 @@ export class TodoManager {
   }
 
   async deleteTodo(): Promise<void> {
-    const [selectedTodo] = await selectTodos([
-      ...this.state.todos.todos.values()
-    ]);
+    const allTodos = [...this.state.todos.todos.values()];
+
+    if (allTodos.length === 0) {
+      await emptyTodoConfirmation('delete');
+      return;
+    }
+
+    const [selectedTodo] = await selectTodos(allTodos);
     if (!selectedTodo) {
       return;
     }
